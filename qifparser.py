@@ -1,8 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/python3
+
 import sys
 import pprint
 import decimal
 import datetime
+import pprint
 
 class Base(object):
 
@@ -22,13 +24,20 @@ class Account(Base):
         self.qname = None
         self.transactions = []
     #:
+
+    def __repr__(self):
+        return self.qname
+    #:
 #:
 
 class Split(Base):
     pass
 
 class Security(Base):
-    pass
+    def __repr__(self):
+        return self.qname
+    #:
+#:
 
 class Category(Base):
     pass
@@ -40,7 +49,7 @@ class Transaction(Base):
         self.address = []
         self.lines= []
     #:
-
+    
     def addSplit(self, field, value):
         if (not self.splits) or (getattr(self.splits[-1], field) is not None):
             self.splits.append(Split())
@@ -65,6 +74,7 @@ class Qif(object):
         else:
             self.fh = sys.stdin
         #:
+        self.fh.reconfigure(errors="ignore")
 
         self.lastAccount = None
         self.accounts = {}
@@ -388,27 +398,22 @@ if __name__ == "__main__":
 
     qif = Qif()
 
-    for account in qif.accounts.values():
-        for transaction in account.transactions:
-            
-            if transaction.tAmount != transaction.uAmount:
-                sys.stderr.write("T/U mismatch: %s\n" % str(transaction))
-            #:
+    test_amount = decimal.Decimal('1562.75')
 
-            if transaction.splits:
-                total = 0
-                for split in transaction.splits:
-                    if split.amount:
-                        total += split.amount
-                    #:
-                #:
-                if total != transaction.tAmount:
-                    sys.stderr.write("Missing splits: %s\n" % str(transaction))
-                    sys.stderr.write("Total: %s\n" % repr(total))
-                    sys.stderr.write("Account: %s\n" % transaction.account.qname)
-                    for split in transaction.splits:
-                        sys.stderr.write("split: %s\n" % str(split))
-                    #:
+    for account in qif.accounts.values():
+        print(f"{account.qname} {account.description} {account.type}")
+    #:
+
+    for category in qif.categories.values():
+        print(f"{category.qname}")
+    #:
+    
+    for account in qif.accounts.values():
+        for tx in account.transactions:
+            print(f"{account.qname} {tx}")
+            if tx.splits:
+                for split in tx.splits:
+                    print(f"{split}")
                 #:
             #:
         #:
